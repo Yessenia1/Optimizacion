@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimización Lineal - Método Gráfico Dinámico</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        label {
+            font-weight: bold;
+            color: #333;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .funcion-objetivo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .coef-input {
+            width: 80px;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .coef-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+        }
+
+        .variable-label {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+
+        .restriccion-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+            flex-wrap: wrap;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .signo-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            min-width: 50px;
+            transition: all 0.3s;
+        }
+
+        .signo-btn:hover {
+            background: #5a6fd8;
+            transform: scale(1.05);
+        }
+
+        .signo-btn.active {
+            background: #28a745;
+        }
+
+        .btn-remove {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-remove:hover {
+            background: #c82333;
+        }
+
+        button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            margin: 5px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-group {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        #resultado {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #28a745;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #dc3545;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+            margin: 10px 0;
+        }
+
+        .info {
+            background: #cce7ff;
+            color: #004085;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0066cc;
+            margin: 10px 0;
+        }
+
+        #grafico {
+            margin-top: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .plus-sign {
+            font-weight: bold;
+            font-size: 18px;
+            color: #28a745;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🎯 Optimización Lineal Dinámica</h1>
+        <p style="text-align: center; color: #666; font-size: 18px;">Método Gráfico para Programación Lineal</p>
+
+        <div class="input-group">
+            <label>Función Objetivo:</label>
+            <div class="funcion-objetivo">
+                <span>Z =</span>
+                <input type="number" id="coef-x1-obj" class="coef-input" value="0" step="0.1">
+                <span class="variable-label">x₁</span>
+                <span class="plus-sign">+</span>
+                <input type="number" id="coef-x2-obj" class="coef-input" value="0" step="0.1">
+                <span class="variable-label">x₂</span>
+            </div>
+            <div class="radio-group">
+                <label><input type="radio" name="tipoZ" value="max" checked> 📈 Maximizar</label>
+                <label><input type="radio" name="tipoZ" value="min"> 📉 Minimizar</label>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Restricciones:</label>
+            <div id="restricciones">
+                <div class="restriccion-item" data-id="1">
+                    <input type="number" class="coef-input coef-x1" value="0" step="0.1">
+                    <span class="variable-label">x₁</span>
+                    <span class="plus-sign">+</span>
+                    <input type="number" class="coef-input coef-x2" value="0" step="0.1">
+                    <span class="variable-label">x₂</span>
+                    <button type="button" class="signo-btn active" data-signo="<="
+                        onclick="seleccionarSigno(this, '<=')">
+                        ≤
+                    </button>
+                    <button type="button" class="signo-btn" data-signo=">=" onclick="seleccionarSigno(this, '>=')">
+                        ≥
+                    </button>
+                    <input type="number" class="coef-input valor-derecha" value="0" step="0.1">
+                    <button type="button" class="btn-remove" onclick="eliminarRestriccion(this)">❌</button>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button onclick="agregarRestriccion()">➕ Añadir Restricción</button>
+            <button onclick="limpiarRestricciones()">🗑️ Limpiar Todo</button>
+            <button onclick="ejemploPredefinido()">📝 Ejemplo</button>
+        </div>
+
+        <div class="btn-group">
+            <button onclick="resolver()" style="font-size: 18px; padding: 15px 30px;">🚀 Resolver Problema</button>
+        </div>
+
+        <div id="mensajes"></div>
+        <div id="grafico" style="width:100%;height:600px;"></div>
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        let contadorRestricciones = 4;
+
+        function mostrarMensaje(mensaje, tipo = 'info') {
+            const div = document.getElementById('mensajes');
+            div.innerHTML = `<div class="${tipo}">${mensaje}</div>`;
+            setTimeout(() => div.innerHTML = '', 5000);
+        }
+
+        function cambiarSigno(btn) {
+            const signos = ['<=', '>=', '='];
+            const simbolos = ['≤', '≥', '='];
+            const currentSigno = btn.getAttribute('data-signo');
+            const currentIndex = signos.indexOf(currentSigno);
+            const nextIndex = (currentIndex + 1) % signos.length;
+
+            btn.setAttribute('data-signo', signos[nextIndex]);
+            btn.textContent = simbolos[nextIndex];
+
+            btn.classList.add('active');
+            setTimeout(() => btn.classList.remove('active'), 200);
+        }
+
+        function agregarRestriccion() {
+            contadorRestricciones++;
+            const div = document.getElementById("restricciones");
+            const nueva = document.createElement("div");
+            nueva.className = "restriccion-item";
+            nueva.setAttribute('data-id', contadorRestricciones);
+
+            nueva.innerHTML = `
+                                <input type="number" class="coef-input coef-x1" value="1" step="0.1">
+                                <span class="variable-label">x₁</span>
+                                <span class="plus-sign">+</span>
+                                <input type="number" class="coef-input coef-x2" value="1" step="0.1">
+                                <span class="variable-label">x₂</span>
+
+                                <!-- Dos botones para signo -->
+                                <button type="button"
+                                        class="signo-btn active"
+                                        data-signo="<="
+                                        onclick="seleccionarSigno(this, '<=')">
+                                ≤
+                                </button>
+                                <button type="button"
+                                        class="signo-btn"
+                                        data-signo=">="
+                                        onclick="seleccionarSigno(this, '>=')">
+                                ≥
+                                </button>
+
+                                <input type="number" class="coef-input valor-derecha" value="10" step="0.1">
+                                <button type="button" class="btn-remove" onclick="eliminarRestriccion(this)">❌</button>
+                            `;
+            div.appendChild(nueva);
+            mostrarMensaje('✅ Restricción añadida correctamente', 'success');
+        }
+
+        function eliminarRestriccion(btn) {
+            const restriccionItem = btn.parentElement;
+            const totalRestricciones = document.querySelectorAll('.restriccion-item').length;
+
+            if (totalRestricciones <= 1) {
+                mostrarMensaje('⚠️ Debe mantener al menos una restricción', 'error');
+                return;
+            }
+
+            restriccionItem.remove();
+            mostrarMensaje('🗑️ Restricción eliminada', 'success');
+        }
+
+        function limpiarRestricciones() {
+            const div = document.getElementById("restricciones");
+            div.innerHTML = `
+        <div class="restriccion-item" data-id="1">
+          <input type="number" class="coef-input coef-x1" value="1" step="0.1">
+          <span class="variable-label">x₁</span>
+          <span class="plus-sign">+</span>
+          <input type="number" class="coef-input coef-x2" value="1" step="0.1">
+          <span class="variable-label">x₂</span>
+          <button type="button" class="signo-btn" onclick="cambiarSigno(this)" data-signo="<=">≤</button>
+          <input type="number" class="coef-input valor-derecha" value="10" step="0.1">
+          <button type="button" class="btn-remove" onclick="eliminarRestriccion(this)">❌</button>
+        </div>
+      `;
+            contadorRestricciones = 1;
+            mostrarMensaje('🧹 Restricciones limpiadas', 'success');
+        }
+
+        function ejemploPredefinido() {
+            document.getElementById("coef-x1-obj").value = 3;
+            document.getElementById("coef-x2-obj").value = 2;
+            document.querySelector('input[name="tipoZ"][value="max"]').checked = true;
+
+            const div = document.getElementById("restricciones");
+            div.innerHTML = `
+        <div class="restriccion-item" data-id="1">
+          <input type="number" class="coef-input coef-x1" value="2" step="0.1">
+          <span class="variable-label">x₁</span>
+          <span class="plus-sign">+</span>
+          <input type="number" class="coef-input coef-x2" value="1" step="0.1">
+          <span class="variable-label">x₂</span>
+          <button type="button" class="signo-btn" onclick="cambiarSigno(this)" data-signo="<=">≤</button>
+          <input type="number" class="coef-input valor-derecha" value="8" step="0.1">
+          <button type="button" class="btn-remove" onclick="eliminarRestriccion(this)">❌</button>
+        </div>
+        <div class="restriccion-item" data-id="2">
+          <input type="number" class="coef-input coef-x1" value="1" step="0.1">
+          <span class="variable-label">x₁</span>
+          <span class="plus-sign">+</span>
+          <input type="number" class="coef-input coef-x2" value="2" step="0.1">
+          <span class="variable-label">x₂</span>
+          <button type="button" class="signo-btn" onclick="cambiarSigno(this)" data-signo="<=">≤</button>
+          <input type="number" class="coef-input valor-derecha" value="6" step="0.1">
+          <button type="button" class="btn-remove" onclick="eliminarRestriccion(this)">❌</button>
+        </div>
+        <div class="restriccion-item" data-id="3">
+          <input type="number" class="coef-input coef-x1" value="1" step="0.1">
+          <span class="variable-label">x₁</span>
+          <span class="plus-sign">+</span>
+          <input type="number" class="coef-input coef-x2" value="0" step="0.1">
+          <span class="variable-label">x₂</span>
+          <button type="button" class="signo-btn" onclick="cambiarSigno(this)" data-signo=">=">≥</button>
+          <input type="number" class="coef-input valor-derecha" value="0" step="0.1">
+          <button type="button" class="btn-remove" onclick="eliminarRestriccion(this)">❌</button>
+        </div>
+        <div class="restriccion-item" data-id="4">
+          <input type="number" class="coef-input coef-x1" value="0" step="0.1">
+          <span class="variable-label">x₁</span>
+          <span class="plus-sign">+</span>
+          <input type="number" class="coef-input coef-x2" value="1" step="0.1">
+          <span class="variable-label">x₂</span>
+          <button type="button" class="signo-btn" onclick="cambiarSigno(this)" data-signo=">=">≥</button>
+          <input type="number" class="coef-input valor-derecha" value="0" step="0.1">
+          <button type="button" class="btn-remove" onclick="eliminarRestriccion(this)">❌</button>
+        </div>
+      `;
+            contadorRestricciones = 4;
+            mostrarMensaje('📝 Ejemplo cargado correctamente', 'success');
+        }
+
+        function obtenerDatosProblema() {
+            // Obtener función objetivo
+            const coefX1Obj = parseFloat(document.getElementById("coef-x1-obj").value) || 0;
+            const coefX2Obj = parseFloat(document.getElementById("coef-x2-obj").value) || 0;
+            const tipoZ = document.querySelector('input[name="tipoZ"]:checked').value;
+
+            // Obtener restricciones
+            const restricciones = [];
+            const restriccionesItems = document.querySelectorAll('.restriccion-item');
+
+            restriccionesItems.forEach(item => {
+                const coefX1 = parseFloat(item.querySelector('.coef-x1').value) || 0;
+                const coefX2 = parseFloat(item.querySelector('.coef-x2').value) || 0;
+                const activo = item.querySelector('.signo-btn.active')
+                    || item.querySelector('.signo-btn');
+                const signo = activo.getAttribute('data-signo');
+
+                const valorDerecha = parseFloat(item.querySelector('.valor-derecha').value) || 0;
+
+                restricciones.push({
+                    coefX1,
+                    coefX2,
+                    signo,
+                    valorDerecha
+                });
+            });
+
+            return {
+                funcionObjetivo: { coefX1: coefX1Obj, coefX2: coefX2Obj },
+                tipoOptimizacion: tipoZ,
+                restricciones
+            };
+        }
+
+        function evaluarFuncionObjetivo(x1, x2, coefX1, coefX2) {
+            return coefX1 * x1 + coefX2 * x2;
+        }
+
+        function verificarRestriccion(x1, x2, restriccion) {
+            const valorIzquierda = restriccion.coefX1 * x1 + restriccion.coefX2 * x2;
+            const epsilon = 1e-10;
+
+            switch (restriccion.signo) {
+                case '<=':
+                    return valorIzquierda <= restriccion.valorDerecha + epsilon;
+                case '>=':
+                    return valorIzquierda >= restriccion.valorDerecha - epsilon;
+                case '=':
+                    return Math.abs(valorIzquierda - restriccion.valorDerecha) <= epsilon;
+                default:
+                    return false;
+            }
+        }
+
+        function encontrarInterseccion(r1, r2) {
+            const a1 = r1.coefX1, b1 = r1.coefX2, c1 = r1.valorDerecha;
+            const a2 = r2.coefX1, b2 = r2.coefX2, c2 = r2.valorDerecha;
+
+            const det = a1 * b2 - a2 * b1;
+
+            if (Math.abs(det) < 1e-10) {
+                return null; // Líneas paralelas
+            }
+
+            const x1 = (c1 * b2 - c2 * b1) / det;
+            const x2 = (a1 * c2 - a2 * c1) / det;
+
+            return { x1, x2 };
+        }
+
+        function encontrarVertices(restricciones) {
+            const vertices = [];
+            const epsilon = 1e-10;
+
+            // Probar todas las combinaciones de 2 restricciones
+            for (let i = 0; i < restricciones.length; i++) {
+                for (let j = i + 1; j < restricciones.length; j++) {
+                    const punto = encontrarInterseccion(restricciones[i], restricciones[j]);
+
+                    if (punto && punto.x1 >= -epsilon && punto.x2 >= -epsilon) {
+                        // Verificar si el punto satisface todas las restricciones
+                        let factible = true;
+                        for (let k = 0; k < restricciones.length; k++) {
+                            if (!verificarRestriccion(punto.x1, punto.x2, restricciones[k])) {
+                                factible = false;
+                                break;
+                            }
+                        }
+
+                        if (factible) {
+                            // Evitar duplicados
+                            const existe = vertices.some(v =>
+                                Math.abs(v.x1 - punto.x1) < epsilon &&
+                                Math.abs(v.x2 - punto.x2) < epsilon
+                            );
+                            if (!existe) {
+                                vertices.push(punto);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return vertices;
+        }
+
+        function resolver() {
+            try {
+                document.getElementById('mensajes').innerHTML = '';
+                document.getElementById('resultado').innerHTML = '';
+
+                mostrarMensaje('🔄 Procesando...', 'info');
+
+                const datos = obtenerDatosProblema();
+
+                if (datos.restricciones.length === 0) {
+                    throw new Error('Debe ingresar al menos una restricción');
+                }
+
+                // Encontrar vértices de la región factible
+                const vertices = encontrarVertices(datos.restricciones);
+
+                if (vertices.length === 0) {
+                    throw new Error('No se encontró región factible. Verifique las restricciones.');
+                }
+
+                // Evaluar función objetivo en cada vértice
+                const resultados = vertices.map(punto => ({
+                    x1: punto.x1,
+                    x2: punto.x2,
+                    z: evaluarFuncionObjetivo(punto.x1, punto.x2, datos.funcionObjetivo.coefX1, datos.funcionObjetivo.coefX2)
+                }));
+
+                // Encontrar el óptimo
+                const optimo = resultados.reduce((mejor, actual) => {
+                    if (datos.tipoOptimizacion === 'max') {
+                        return actual.z > mejor.z ? actual : mejor;
+                    } else {
+                        return actual.z < mejor.z ? actual : mejor;
+                    }
+                });
+
+                // Generar gráfico
+                generarGrafico(datos.restricciones, vertices, optimo, datos.funcionObjetivo);
+
+                // Mostrar resultados
+                let textoResultado = `🎯 SOLUCIÓN ÓPTIMA\n`;
+                textoResultado += `════════════════════\n`;
+                textoResultado += `📍 Punto óptimo: (${optimo.x1.toFixed(3)}, ${optimo.x2.toFixed(3)})\n`;
+                textoResultado += `💰 Valor óptimo: Z = ${optimo.z.toFixed(3)}\n\n`;
+                textoResultado += `📊 TODOS LOS VÉRTICES:\n`;
+                textoResultado += `════════════════════\n`;
+
+                resultados.forEach((r, i) => {
+                    const marca = r === optimo ? '⭐' : '  ';
+                    textoResultado += `${marca} Vértice ${i + 1}: (${r.x1.toFixed(3)}, ${r.x2.toFixed(3)}) → Z = ${r.z.toFixed(3)}\n`;
+                });
+
+                document.getElementById('resultado').textContent = textoResultado;
+                mostrarMensaje('✅ Problema resuelto exitosamente', 'success');
+
+            } catch (error) {
+                mostrarMensaje(`❌ Error: ${error.message}`, 'error');
+                console.error('Error completo:', error);
+            }
+        }
+
+        function generarGrafico(restricciones, vertices, optimo, funcionObjetivo) {
+            const trazas = [];
+
+            // Generar región factible
+            const regionFactible = generarRegionFactible(restricciones);
+
+            if (regionFactible.x.length > 0) {
+                trazas.push({
+                    x: regionFactible.x,
+                    y: regionFactible.y,
+                    mode: 'markers',
+                    type: 'scatter',
+                    marker: {
+                        size: 2,
+                        color: 'rgba(0, 150, 255, 0.3)',
+                        opacity: 0.6
+                    },
+                    name: 'Región Factible',
+                    showlegend: true
+                });
+            }
+
+            // Añadir líneas de restricciones
+            restricciones.forEach((r, i) => {
+                if (r.coefX1 !== 0 || r.coefX2 !== 0) {
+                    const lineaX = [];
+                    const lineaY = [];
+
+                    const xMax = Math.max(10, ...vertices.map(v => v.x1)) * 1.2;
+                    const yMax = Math.max(10, ...vertices.map(v => v.x2)) * 1.2;
+
+                    if (Math.abs(r.coefX2) > 1e-10) {
+                        // Línea no vertical
+                        for (let x = 0; x <= xMax; x += 0.1) {
+                            const y = (r.valorDerecha - r.coefX1 * x) / r.coefX2;
+                            if (y >= 0 && y <= yMax) {
+                                lineaX.push(x);
+                                lineaY.push(y);
+                            }
+                        }
+                    } else if (Math.abs(r.coefX1) > 1e-10) {
+                        // Línea vertical
+                        const x = r.valorDerecha / r.coefX1;
+                        if (x >= 0 && x <= xMax) {
+                            lineaX.push(x, x);
+                            lineaY.push(0, yMax);
+                        }
+                    }
+
+                    if (lineaX.length > 0) {
+                        trazas.push({
+                            x: lineaX,
+                            y: lineaY,
+                            mode: 'lines',
+                            type: 'scatter',
+                            line: { width: 2, dash: 'dash' },
+                            name: `Restricción ${i + 1}`,
+                            showlegend: true
+                        });
+                    }
+                }
+            });
+
+            // Añadir vértices
+            if (vertices.length > 0) {
+                trazas.push({
+                    x: vertices.map(v => v.x1),
+                    y: vertices.map(v => v.x2),
+                    mode: 'markers+text',
+                    type: 'scatter',
+                    marker: {
+                        size: 10,
+                        color: 'red',
+                        symbol: 'circle'
+                    },
+                    text: vertices.map((v, i) => `V${i + 1}`),
+                    textposition: 'top center',
+                    name: 'Vértices',
+                    showlegend: true
+                });
+            }
+
+            // Destacar punto óptimo
+            trazas.push({
+                x: [optimo.x1],
+                y: [optimo.x2],
+                mode: 'markers+text',
+                type: 'scatter',
+                marker: {
+                    size: 15,
+                    color: 'gold',
+                    symbol: 'star',
+                    line: { width: 2, color: 'orange' }
+                },
+                text: ['ÓPTIMO'],
+                textposition: 'bottom center',
+                name: 'Punto Óptimo',
+                showlegend: true
+            });
+
+            const layout = {
+                title: {
+                    text: '📊 Región Factible y Solución Óptima',
+                    font: { size: 20 }
+                },
+                xaxis: {
+                    title: 'x₁',
+                    showgrid: true,
+                    zeroline: true,
+                    range: [0, Math.max(10, ...vertices.map(v => v.x1)) * 1.2]
+                },
+                yaxis: {
+                    title: 'x₂',
+                    showgrid: true,
+                    zeroline: true,
+                    range: [0, Math.max(10, ...vertices.map(v => v.x2)) * 1.2]
+                },
+                plot_bgcolor: 'rgba(240,240,240,0.5)',
+                paper_bgcolor: 'white',
+                margin: { t: 50, r: 50, b: 50, l: 50 }
+            };
+
+            Plotly.newPlot("grafico", trazas, layout, { responsive: true });
+        }
+
+        function seleccionarSigno(btn, signo) {
+            const wrapper = btn.closest('.restriccion-item');
+            wrapper.querySelectorAll('.signo-btn').forEach(b => {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+
+
+        function generarRegionFactible(restricciones) {
+            const puntosX = [];
+            const puntosY = [];
+
+            // Determinar rango apropiado
+            const maxRange = 20;
+            const step = 0.2;
+
+            for (let x1 = 0; x1 <= maxRange; x1 += step) {
+                for (let x2 = 0; x2 <= maxRange; x2 += step) {
+                    let factible = true;
+
+                    for (let r of restricciones) {
+                        if (!verificarRestriccion(x1, x2, r)) {
+                            factible = false;
+                            break;
+                        }
+                    }
+
+                    if (factible) {
+                        puntosX.push(x1);
+                        puntosY.push(x2);
+                    }
+                }
+            }
+
+            return { x: puntosX, y: puntosY };
+        }
+
+        // Cargar ejemplo al inicio
+        window.onload = function () {
+            mostrarMensaje(' ¡Bienvenido! Usa los botones para cambiar signos y ajusta los coeficientes', 'success');
+        };
+
+    </script>
+</body>
+
+</html>
